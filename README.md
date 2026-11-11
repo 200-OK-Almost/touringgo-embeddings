@@ -2,7 +2,7 @@
 
 Microservicio encargado de generar representaciones vectoriales (*embeddings*) de textos para el sistema de búsqueda semántica de TouringGO.
 
-Utiliza **Sentence Transformers** y el modelo `intfloat/multilingual-e5-small`, que permite generar embeddings multilingües de 384 dimensiones.
+Utiliza **Sentence Transformers** y el modelo `BAAI/bge-m3`, que permite generar embeddings multilingües de 1024 dimensiones.
 
 ## Responsabilidades
 
@@ -24,7 +24,7 @@ El microservicio `touringgo-lugares` consume esta API para generar y utilizar em
 - Uvicorn
 - Sentence Transformers
 - PyTorch
-- Modelo: `intfloat/multilingual-e5-small`
+- Modelo: `BAAI/bge-m3`
 
 ## Estructura del proyecto
 
@@ -44,23 +44,14 @@ touringgo-embeddings/
 
 ## Modelo de embeddings
 
-Se utiliza el modelo `intfloat/multilingual-e5-small`.
+Se utiliza el modelo `BAAI/bge-m3`.
 
 Características principales:
 
-- 384 dimensiones por embedding.
+- 1024 dimensiones por embedding.
 - Soporte multilingüe, incluido español.
 - Adecuado para búsqueda semántica.
 - Permite comparar consultas y documentos mediante similitud coseno.
-
-El modelo utiliza prefijos diferentes según el tipo de texto:
-
-| Tipo | Prefijo | Uso |
-|---|---|---|
-| Documento | `passage:` | Descripciones de lugares del catálogo |
-| Consulta | `query:` | Consultas de búsqueda del usuario |
-
-Estos prefijos son importantes para obtener resultados adecuados con el modelo E5.
 
 Los embeddings se generan normalizados mediante `normalize_embeddings=True`, por lo que la similitud coseno puede calcularse mediante el producto punto entre dos vectores.
 
@@ -106,12 +97,12 @@ Se utiliza principalmente para generar los embeddings de los lugares del catálo
     [0.0123, -0.0345, 0.0567],
     [0.0234, 0.0456, -0.0678]
   ],
-  "dimensions": 384,
+  "dimensions": 1024,
   "count": 2
 }
 ```
 
-Los vectores del ejemplo están abreviados. Cada embedding contiene 384 valores.
+Los vectores del ejemplo están abreviados. Cada embedding contiene 1024 valores.
 
 ### POST /embeddings/queries
 
@@ -249,17 +240,18 @@ No es necesario publicar el puerto del servicio al host para permitir esta comun
 
 | Variable | Descripción | Valor por defecto |
 |---|---|---|
+| `MODEL_NAME` | Identificador del modelo de Hugging Face | `BAAI/bge-m3` |
 | `MODEL_PATH` | Ruta local de un modelo previamente descargado | No definida |
 | `HF_HOME` | Directorio utilizado por Hugging Face para almacenar modelos y caché | Valor por defecto de Hugging Face |
 
-Cuando no se especifica `MODEL_PATH`, se utiliza el identificador `intfloat/multilingual-e5-small` y se descarga el modelo si no está disponible en la caché.
+Cuando no se especifica `MODEL_PATH`, se utiliza el identificador de `MODEL_NAME` (por defecto `BAAI/bge-m3`) y se descarga el modelo si no está disponible en la caché.
 
 ## Consideraciones
 
 - El modelo se carga una sola vez durante el inicio de la aplicación.
 - Las solicitudes pueden contener varios textos, permitiendo generar embeddings por lotes.
-- Los embeddings de documentos y consultas deben generarse utilizando sus respectivos prefijos.
-- Los vectores generados tienen 384 dimensiones y están normalizados.
+- Los embeddings de documentos y consultas se generan sobre el texto tal cual (bge-m3 no requiere prefijos).
+- Los vectores generados tienen 1024 dimensiones y están normalizados.
 - La inferencia se realiza mediante CPU en la configuración Docker prevista.
 - El servicio no almacena los embeddings de los lugares: su persistencia y utilización corresponden a `touringgo-lugares`.
 
