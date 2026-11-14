@@ -5,7 +5,7 @@ from threading import Lock
 from sentence_transformers import SentenceTransformer
 
 
-MODEL_NAME = "intfloat/multilingual-e5-small"
+MODEL_NAME = os.getenv("MODEL_NAME", "BAAI/bge-m3")
 
 MODEL_PATH = os.getenv("MODEL_PATH")
 
@@ -27,25 +27,16 @@ class EmbeddingService:
         self.lock = Lock()
 
     def generate_documents(self, texts: list[str]) -> list[list[float]]:
-        return self._generate(texts, "passage")
+        return self._generate(texts)
 
     def generate_queries(self, texts: list[str]) -> list[list[float]]:
-        return self._generate(texts, "query")
+        return self._generate(texts)
 
-    def _generate(
-        self,
-        texts: list[str],
-        prefix: str
-    ) -> list[list[float]]:
-
-        prefixed_texts = [
-            f"{prefix}: {text}"
-            for text in texts
-        ]
+    def _generate(self, texts: list[str]) -> list[list[float]]:
 
         with self.lock:
             embeddings = self.model.encode(
-                prefixed_texts,
+                texts,
                 batch_size=32,
                 normalize_embeddings=True,
                 convert_to_numpy=True,
